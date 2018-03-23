@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RUBI</title>
+</head>
+<body>
+<!--pending orders-->
+<table>
+    <caption>PENDING ORDERS</caption>
+    <th>Order ID</th>
+    <th>ItemsBought</th>
+    <th>Order Amount</th>
+    <th>Order_timestamp</th>
+    {% for obj in pending %}
+    <tr>
+        <td>{{obj.ORD_No}}</td><td>{{obj.quantity}}</td>
+        <td>{{obj.get_order_amount}}</td><td>{{obj.order_timestamp}}</td>
+    </tr>
+{% endfor %}
+</table>
+<span>Total outstanding orders:{{c_pending}}</span><br/>
+
+<!--cleared orders-->
+<table>
+    {% if not cleared %}
+        <span>No cleared Orders</Orders></span><br/>
+    {% else %}
+    <caption>CLEARED ORDERS</caption>
+    <th>Order ID</th>
+    <th>ItemsBought</th>
+    <th>Order Amount</th>
+    <th>Order_timestamp</th>
+    <tr>
+        {% for obj in cleared %}
+        <td>{{obj.ORD_No}}</td><td>{{obj.quantity}}</td>
+        <td>{{obj.get_order_amount}}</td><td>{{obj.order_timestamp}}</td></tr>
+{% endfor %}
+    {% endif %}
+</table>
+<span>Total cleared orders:{{c_cleared}}</span><br/>
+<span>User count : {{user_count}}</span><br/>
+<!--cart-->
+<table>
+    {% if not carts %}
+        <span>No  Carts</Orders></span><br/>
+    {% else %}
+    <caption>CURRENT CARTS</caption>
+    <th>Cart ID</th>
+    <th>CartNo</th>
+    <th>Cart Total</th>
+    <th>Cart Status</th>
+    <th>Cart TimeStamp</th>
+    <th>Clear Cart</th>
+    <tr>
+        {% for obj in carts %}
+        <td>{{obj.id}}</td>
+        <td>{{obj.cart_No}}</td>
+        <td>{{obj.get_cart_total}}</td>
+        <td>{{obj.cart_status}}</td>
+        <td>{{obj.cart_timestamp}}</td>
+        {% if obj.cart_status == PENDING %}
+        <td> <a href="{% url 'rubi_food:clear_cart' obj.id %}">CLEAR_CART</a></td>
+        {% else %}
+        <td><a href="#">CLEARED</a></td>
+        {% endif %}
+    </tr>
+{% endfor %}
+    {% endif %}
+</table>
+</body>
+</html>
