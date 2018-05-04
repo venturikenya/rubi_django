@@ -16,9 +16,11 @@ Including another URLconf
 from django.conf.urls import url
 from . import views
 from graphene_django.views import GraphQLView
+from django.views.decorators.csrf import csrf_exempt
+
 app_name='rubi_food'
 urlpatterns = [
-    url(r'^rubi_api/$', GraphQLView.as_view(graphiql=True)),
+    url(r'^rubi_api/$', csrf_exempt(GraphQLView.as_view(graphiql=True))),
     url(r'^(?P<id>[0-9]+)/history/',views.history,name='history'),
     url(r'^dashboard/',views.dash,name='dashboard'),
     url(r'^(?P<id>[0-9]+)/Cart/$', views.clear_cart, name='clear_cart'),
