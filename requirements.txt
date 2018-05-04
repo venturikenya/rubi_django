@@ -1,14 +1,17 @@
 aniso8601==3.0.0
+Babel==2.5.3
 Django==2.0.5
 django-background-tasks==1.1.13
 django-compat==1.0.15
 django-filter==1.1.0
 django-money==0.13.2
+django-phonenumber-field==2.0.0
 graphene==2.1
 graphene-django==2.0.0
 graphql-core==2.0
 graphql-relay==0.4.5
 iso8601==0.1.12
+phonenumberslite==8.9.4
 Pillow==5.1.0
 promise==2.1
 py-moneyed==0.7.0
