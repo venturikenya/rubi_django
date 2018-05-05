@@ -24,7 +24,7 @@ SECRET_KEY = 'dgbac@j9(ucu-zopc39@-o!cqz9n%92y5v_mdim3fclq1d-w3$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.11', '192.168.43.229', '127.0.0.1', 'http://victormungai.pythonanywhere.com/']
+ALLOWED_HOSTS = ['192.168.0.11', '192.168.43.229', '127.0.0.1', 'victormungai.pythonanywhere.com/']
 
 # Application definition
 
