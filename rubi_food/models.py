@@ -1,9 +1,18 @@
 from django.db import models
 import datetime
+import graphene
 from django.contrib.auth.models import User
 from django.utils import timezone
 from djmoney.models.fields import MoneyField
+from graphene_django.converter import convert_django_field
 from phonenumber_field.modelfields import PhoneNumberField
+
+
+# this applies to any special field that graphene cant convert by default
+# noinspection PyUnusedLocal
+@convert_django_field.register(PhoneNumberField)
+def convert_phone_number_field_tostring(field, registry=None):
+    return graphene.String()
 
 
 # Create your models here.
@@ -22,7 +31,7 @@ class Category(models.Model):
 
 
 class Food(models.Model):
-    food_name = models.CharField(max_length=25, null=False, default="Rubi_specials")
+    food_name = models.CharField(max_length=500, null=False, default="Rubi_specials")
     food_description = models.TextField(max_length=200, null=False)
     quantity_available = models.IntegerField(null=False, default=0)
     unit_value = MoneyField(decimal_places=2, default_currency='KES', max_digits=6)

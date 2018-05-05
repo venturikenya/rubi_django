@@ -2,6 +2,7 @@ from graphene import ObjectType, Field, Node, String, ClientIDMutation
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 from .models import *
+import os
 
 
 # creating an object that can be accessed from the graphql endpoint
@@ -26,12 +27,14 @@ class OrderNode(DjangoObjectType):
     class Meta:
         model = Order
         interfaces = (Node,)
+        filter_fields = []
 
 
 class CartNode(DjangoObjectType):
     class Meta:
         model = Cart
         interfaces = (Node,)
+        filter_fields = []
 
 
 class ProfileNode(DjangoObjectType):
@@ -141,6 +144,58 @@ class NewOrder(ClientIDMutation):
         return NewOrder(Pnode=temp)
 
 
+def decode_image(data, name):
+    """
+    Function to decode byte string to image
+    Base64 module function b64decode will decode the byte string into bytes
+    and these bytes will then be written into a file whose name is the user's name
+    :param data: Byte string of the image
+    :param name: Name of user to be used as file name
+    :return: Image file name of the user
+    """
+    # get encoded version of the byte string
+    img_data = data.encode('UTF-8', 'strict')
+    import base64
+    directory = os.getcwd() + '/media/profile_pictures/'
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+    # create file name
+    pic_name = directory + name.replace(' ', '_') + ".jpg"
+    # decode image string and write into file
+    with open(pic_name, 'wb') as fh:
+        fh.write(base64.b64decode(img_data))
+    # return file name without directory path
+    pics = pic_name.split('/')
+    return pics[-3] + '/' + pics[-2] + '/' + pics[-1]
+
+
+def compress_image(filename):
+    """
+    Function to resize(compress) image to a given size
+    :param filename: Image to resize
+    :return: None
+    """
+    from PIL import Image  # library for compressing images
+    # open file to be compressed
+    img = Image.open(filename)
+    # compress the image accordingly
+    foo = img.resize((200, 200), Image.ANTIALIAS)
+    # save the downsized image
+    foo.save(filename, optimize=True, quality=100)
+
+
+def upload_photo(name, picture, url=""):
+    filename = decode_image(picture, name)
+    try:
+        compress_image(filename)
+    except Exception as err:
+        print("Something went wrong: {}".format(err))
+    if url.endswith('/'):
+        return "".join([url, filename])
+    else:
+        return "/".join([url, filename])
+
+
 class NewCustomer(ClientIDMutation):
     customer_node = Field(ProfileNode)
 
@@ -152,6 +207,7 @@ class NewCustomer(ClientIDMutation):
         mobile_contact = String()
         profile_picture = String()
         description = String()
+        url = String()
 
     # noinspection PyUnusedLocal
     @classmethod
@@ -168,11 +224,49 @@ class NewCustomer(ClientIDMutation):
             location=entries.get('location'),
             reg_no=(Customer.get_total_number_of_customers() + 1),
             mobile_contact=entries.get('mobile_contact'),
-            profile_pic=entries.get('profile_picture'),
+            profile_picture=upload_photo(entries.get('first_name') + " " + entries.get('last_name'),
+                                         entries.get('profile_picture'), entries.get('url')),
             description=entries.get('description'),
         )
         temp.save()
         return NewCustomer(customer_node=temp)  # return an object of type NewCart which is a node
+
+
+class UpdateCustomerPicture(ClientIDMutation):
+    customer_node = Field(ProfileNode)
+
+    class Input:
+        email = String()
+        profile_picture = String()
+        url = String()
+
+    # noinspection PyUnusedLocal
+    @classmethod
+    def mutate_and_get_payload(cls, context, info, **entries):
+        user = Customer.objects.get(email=entries.get('email'))
+        user.profile_picture = upload_photo(user.first_name + " " + user.last_name,
+                                            entries.get('profile_picture'), entries.get('url'))
+        user.save()
+        return UpdateCustomerPicture(customer_node=user)
+
+
+class DeleteCustomer(ClientIDMutation):
+    customer_node = Field(ProfileNode)
+
+    class Input:
+        email = String()
+
+    # noinspection PyUnusedLocal
+    @classmethod
+    def mutate_and_get_payload(cls, context, info, **entries):
+        user = Customer.objects.get(email=entries.get('email'))
+        username = user.username
+        users = User.objects.all().filter(username=username)
+        if users:
+            for user_ in users:
+                user_.delete()
+        user.delete()
+        return DeleteCustomer(customer_node=user)
 
 
 class NewAccount(ClientIDMutation):
@@ -196,11 +290,11 @@ class NewAccount(ClientIDMutation):
 
 
 class CartMutation(ObjectType):
-    new_client = NewCart.Field()
+    new_cart = NewCart.Field()
 
 
 class OrderMutation(ObjectType):
-    new_product = NewOrder.Field()
+    new_order = NewOrder.Field()
 
 
 class CustomerMutation(ObjectType):
@@ -209,3 +303,11 @@ class CustomerMutation(ObjectType):
 
 class AccountMutation(ObjectType):
     new_account = NewAccount.Field()
+
+
+class DeleteCustomerMutation(ObjectType):
+    delete_customer = DeleteCustomer.Field()
+
+
+class UpdateCustomerPictureMutation(ObjectType):
+    update_customer_picture = UpdateCustomerPicture.Field()
