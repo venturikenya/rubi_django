@@ -212,10 +212,14 @@ class NewCustomer(ClientIDMutation):
     # noinspection PyUnusedLocal
     @classmethod
     def mutate_and_get_payload(cls, context, info, **entries):
-        user_ = entries.get('first_name').lower() + "_" + entries.get('last_name').lower()
-        users = User.objects.all().filter(username=user_)
+        user_ = entries.get('first_name', 'first').lower() + "_" + entries.get('last_name', 'name').lower()
+        users = list(User.objects.filter(username__icontains=user_).all())
         if users:
+            # enable registration of users with same name
+            user_ = user_ + '_' + repr(int(users[len(users) - 1].username.split('_')[-1]) + 1)
+        else:
             user_ = user_ + '_0'
+        print(entries)
         temp = Customer(
             last_name=entries.get('last_name'),
             first_name=entries.get('first_name'),
